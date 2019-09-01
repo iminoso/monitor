@@ -24,6 +24,7 @@ defmodule MonitorWeb do
       import Plug.Conn
       import MonitorWeb.Gettext
       alias MonitorWeb.Router.Helpers, as: Routes
+      import Phoenix.LiveView, only: [live_render: 2, live_render: 3]
     end
   end
 
@@ -50,6 +51,7 @@ defmodule MonitorWeb do
       use Phoenix.Router
       import Plug.Conn
       import Phoenix.Controller
+      import Phoenix.LiveView.Router
     end
   end
 

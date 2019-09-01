@@ -1,6 +1,8 @@
 defmodule MonitorWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :monitor
 
+  socket "/live", Phoenix.LiveView.Socket
+
   socket "/socket", MonitorWeb.UserSocket,
     websocket: true,
     longpoll: false

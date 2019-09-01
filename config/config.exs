@@ -12,7 +12,8 @@ config :monitor, MonitorWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "E4EC6I9It4aFeVDfBA2jlemVKuEks29g4TT4uh6SpOH0ttlIkGhD5YpKmmtda5On",
   render_errors: [view: MonitorWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Monitor.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: Monitor.PubSub, adapter: Phoenix.PubSub.PG2],
+  live_view: [signing_salt: "y08vemBh"]
 
 # Configures Elixir's Logger
 config :logger, :console,
