@@ -3,6 +3,6 @@ defmodule MonitorWeb.PageController do
   alias Phoenix.LiveView
 
   def index(conn, _params) do
-    LiveView.Controller.live_render(conn, Monitor.CounterLive, session: %{})
+    LiveView.Controller.live_render(conn, Monitor.ProcessLive, session: %{})
   end
 end

@@ -1,3 +1,10 @@
 /* This file is for your main application css. */
 
 @import "./phoenix.css";
+
+.chart {
+  background: white;
+  border-left: 1px dotted #555;
+  border-bottom: 1px dotted #555;
+}
+

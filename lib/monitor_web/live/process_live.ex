@@ -1,9 +1,9 @@
-defmodule Monitor.CounterLive do
+defmodule Monitor.ProcessLive do
   use Phoenix.LiveView
 
   def render(assigns) do
     ~L"""
-    <svg viewBox="0 0 500 200" class="chart">
+    <svg viewBox="0 0 600 200" class="chart">
 
     <polyline
       fill="none"
@@ -23,13 +23,25 @@ defmodule Monitor.CounterLive do
 
   def mount(_session, socket) do
     tick()
-    {:ok, assign(socket, process_data: [0,0,0,0,0,0,0,0,0,0])}
+    {
+      :ok,
+      assign(
+        socket,
+        process_data: List.duplicate(0, 60)
+      )
+    }
   end
 
   def handle_info(:tick, %{assigns: %{process_data: process_data}} = socket) do
     tick()
     cpu_util = :cpu_sup.util() |> Kernel.trunc()
-    {:noreply, assign(socket, process_data: insert_data_point(process_data, cpu_util))}
+    {
+      :noreply,
+      assign(
+        socket,
+        process_data: insert_data_point(process_data, cpu_util)
+      )
+    }
   end
 
   defp tick() do
@@ -39,7 +51,7 @@ defmodule Monitor.CounterLive do
   # Convert list into string of points accepted by `polyline` element
   defp convert_data(points) do
     str_points = Enum.with_index(points) |> Enum.map(fn {y,x} ->
-      "#{x * 20},#{(100 - y)}"
+      "#{x * 10},#{(200 - (y * 2))}"
     end)
     str_points |> Enum.join(" ")
   end
