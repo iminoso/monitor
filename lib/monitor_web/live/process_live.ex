@@ -1,5 +1,6 @@
 defmodule Monitor.ProcessLive do
   use Phoenix.LiveView
+  alias Monitor.Util
 
   def render(assigns) do
     ~L"""
@@ -32,33 +33,41 @@ defmodule Monitor.ProcessLive do
       :ok,
       assign(
         socket,
-        process_data: List.duplicate(0, 60),
-        process_window: []
+        process_data: List.duplicate(nil, 60),
+        process_window: [],
+        initial_load: true
       )
     }
   end
 
-  def handle_info(:tick, %{assigns: %{process_data: process_data, process_window: process_window}} = socket) do
+  def handle_info(:tick, %{assigns: %{process_data: process_data, process_window: process_window}} = socket)
+    when length(process_window) == 10
+  do
     tick()
-    cpu_util = :cpu_sup.util() |> Kernel.trunc()
-    process_window = process_window ++ [cpu_util]
+    {
+      :noreply,
+      assign(
+        socket,
+        process_data: insert_data_point(process_data, Enum.sum(process_window) / 10),
+        process_window: [],
+        inital_load: false
+      )
+    }
+  end
 
-    if length(process_window) == 10 do
-      process_data = insert_data_point(process_data, Enum.sum(process_window) / 10)
-      process_window = []
-      {:noreply, assign(socket, process_data: process_data, process_window: process_window)}
-    else
-      {:noreply, assign(socket, process_data: process_data, process_window: process_window)}
-    end
+  def handle_info(:tick, %{assigns: %{process_window: process_window}} = socket) do
+    tick()
+    {:noreply, assign(socket, process_window: process_window ++ [Util.cpu_util])}
   end
 
   defp tick() do
     self() |> Process.send_after(:tick, 1000)
   end
 
-  # Convert list into string of points accepted by `polyline` element
+  # Convert list into string of points accepted by `polyline` svg element
   defp convert_data(points) do
     str_points = Enum.with_index(points) |> Enum.map(fn {y,x} ->
+      y = if (y == nil), do: 0, else: y
       "#{x * 10},#{(200 - (y * 2))}"
     end)
     str_points |> Enum.join(" ")
