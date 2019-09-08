@@ -17,3 +17,11 @@
 .header {
   margin: 50px 0 20px 0;
 }
+
+.svg-menu i {
+  font-size: 40px
+}
+
+.svg-menu :hover {
+  cursor: pointer;
+}
