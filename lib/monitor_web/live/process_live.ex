@@ -19,10 +19,13 @@ defmodule Monitor.ProcessLive do
           </div>
         </div>
         <%= if @menu_open do %>
+          <h3>Settings</h3>
           <form>
             <fieldset>
               <label for="window">Monitor Window Length (in seconds)</label>
-              <input phx-click="window" type="number" value="<%= @window_length %>" min="1" id=window>
+              <input phx-click="window" type="number" value="<%= @window_length %>" min="1" id="window">
+              <label for="cpu-max">Simulate Heavy CPU Load</label>
+              <input phx-click="cpu-max" type="checkbox" id="cpu-max" <%= if @simulation do %>checked <% end %>>
             </fieldset>
           </form>
         <% end %>
@@ -31,6 +34,9 @@ defmodule Monitor.ProcessLive do
 
     <main role="main" class="container">
       <h3 class="header"> Process Utilization Percentage</h3>
+      <%= if @simulation do %>
+        <p class="alert alert-warning" role="alert">WARNING: Triggered Heavy CPU Load Simulation</p>
+      <% end %>
       <svg viewBox="0 0 600 200" class="chart">
         <line x1="0" y1="150" x2="600" y2="150" stroke="#555" stroke-width="1" stroke-dasharray="2" />
         <line x1="0" y1="100" x2="600" y2="100" stroke="#555" stroke-width="1" stroke-dasharray="2" />
@@ -97,7 +103,8 @@ defmodule Monitor.ProcessLive do
         process_window: [],
         window_length: 10,
         loading_initial_data: true,
-        menu_open: false
+        menu_open: false,
+        simulation: false
       )
     }
   end
@@ -157,6 +164,24 @@ defmodule Monitor.ProcessLive do
     {:noreply, assign(socket, menu_open: menu_open |> Kernel.not())}
   end
 
+  def handle_event("cpu-max", _value, %{assigns: %{simulation: false}} = socket) do
+    process_list =
+      Util.cpu_util_per_cpu()
+      |> Enum.map(fn _ ->
+        spawn(fn -> infinite_loop() end)
+      end)
+    {:noreply, assign(socket, simulation: true, simulated_processes: process_list)}
+  end
+
+  def handle_event(
+        "cpu-max",
+        _value,
+        %{assigns: %{simulated_processes: simulated_processes}} = socket
+      ) do
+    Enum.map(simulated_processes, fn pid -> Process.exit(pid, :kill) end)
+    {:noreply, assign(socket, simulation: false)}
+  end
+
   defp tick() do
     self() |> Process.send_after(:tick, 1000)
   end
@@ -177,5 +202,10 @@ defmodule Monitor.ProcessLive do
   defp insert_data_point(data, val) do
     [_ | tail] = data
     tail ++ [val]
+  end
+
+  # Infinite loop that is forked to simulate CPU load
+  defp infinite_loop() do
+    infinite_loop()
   end
 end

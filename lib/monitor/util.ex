@@ -16,6 +16,13 @@ defmodule Monitor.Util do
   end
 
   @doc """
+  Returns the cpu usage of the system per cpu
+  """
+  def cpu_util_per_cpu() do
+    :cpu_sup.util([:per_cpu])
+  end
+
+  @doc """
   Calculates the total amount of memory available to the Erlang emulator in MB
   """
   def total_memory() do
