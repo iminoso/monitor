@@ -16,14 +16,46 @@ defmodule Monitor.ProcessLive do
         fill="none"
         stroke="#00749d"
         stroke-width="2"
-        points="<%= @process_data |> convert_data() %>"
+        points="<%= @process_info |> convert_data() %>"
       />
     </svg>
-    <div class="">
-      <div>
-        <%= @process_data |> Enum.join(" ") %>
-      </div>
-    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Process Utilization %</th>
+          <th>Memory Used</th>
+          <th>Memory Available</th>
+        </tr>
+      </thead>
+      <tbody>
+      <%= unless @loading_initial_data do %>
+        <%= for {p, index} <- Enum.with_index(@process_info) do  %>
+          <%= if p do %>
+            <tr>
+              <td>
+                <%= @timestamp |> Enum.at(index) |> Time.to_iso8601() %>
+              </td>
+              <td>
+                <%= @process_info |> Enum.at(index) %>
+              </td>
+              <td>
+                <%= @memory_info |> Enum.at(index) |> Keyword.get(:used_memory) %> MB
+              </td>
+              <td>
+                <%= @memory_info |> Enum.at(index) |> Keyword.get(:free_memory) %> MB
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      <% end %>
+      </tbody>
+    </table>
+
+    <%= if @loading_initial_data do %>
+      Loading system data <%= for _ <- @process_window do %> . <% end %>
+    <% end %>
     """
   end
 
@@ -33,24 +65,34 @@ defmodule Monitor.ProcessLive do
       :ok,
       assign(
         socket,
-        process_data: List.duplicate(nil, 60),
+        process_info: List.duplicate(nil, 60),
+        memory_info: List.duplicate(nil, 60),
         process_window: [],
-        initial_load: true
+        timestamp: List.duplicate(nil, 60),
+        loading_initial_data: true
       )
     }
   end
 
-  def handle_info(:tick, %{assigns: %{process_data: process_data, process_window: process_window}} = socket)
-    when length(process_window) == 10
+  def handle_info(:tick, %{assigns: %{process_info: process_info, memory_info: memory_info, timestamp: timestamp, process_window: process_window}} = socket)
+    when length(process_window) == 9
   do
     tick()
+    process_window = process_window ++ [Util.cpu_util]
     {
       :noreply,
       assign(
         socket,
-        process_data: insert_data_point(process_data, Enum.sum(process_window) / 10),
+        process_info: insert_data_point(process_info, Enum.sum(process_window) / 10),
+        memory_info: insert_data_point(
+          memory_info,
+          Keyword.new(
+            [{:free_memory, Util.free_memory()}, {:used_memory, Util.used_memory()}]
+          )
+        ),
         process_window: [],
-        inital_load: false
+        timestamp: insert_data_point(timestamp, Time.utc_now() |> Time.truncate(:second)),
+        loading_initial_data: false
       )
     }
   end
@@ -73,7 +115,7 @@ defmodule Monitor.ProcessLive do
     str_points |> Enum.join(" ")
   end
 
-  # Add data point to end
+  # Add data point to end of list
   defp insert_data_point(data, val) do
     [_ | tail] = data
     tail ++ [val]
