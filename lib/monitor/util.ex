@@ -50,10 +50,41 @@ defmodule Monitor.Util do
     system_memory_data() |> Keyword.get(:system_total_memory)
   end
 
-  # Calculates memory of the system returning a keyword list of the form in MB:
-  # eg. [total_memory: _, free_memory: _, system_total_memory: _]
+  @doc """
+  Calculates memory of the system returning a keyword list of the form in MB:
+  eg. [total_memory: _, free_memory: _, system_total_memory: _]
+  """
   def system_memory_data() do
     :memsup.get_system_memory_data()
     |> Keyword.new(fn {k, v} -> {k, (v / 1_000_000) |> Kernel.trunc()} end)
+  end
+
+  @doc """
+  Convert list into string of points accepted by `polyline` svg element
+  """
+  def convert_data(data_points) do
+    str_points =
+      Enum.with_index(data_points)
+      |> Enum.map(fn {data_value, timestamp} ->
+        data_value = if data_value == nil, do: 0, else: Keyword.get(data_value, :process_average)
+        "#{timestamp * 10},#{200 - data_value * 2}"
+      end)
+
+    str_points |> Enum.join(" ")
+  end
+
+  @doc """
+  Convert list into string of points accepted by `polyline` svg element
+  """
+  def insert_data_point(data, val) do
+    [_ | tail] = data
+    tail ++ [val]
+  end
+
+  @doc """
+  Infinite loop that is forked to simulate CPU load
+  """
+  def infinite_loop() do
+    infinite_loop()
   end
 end

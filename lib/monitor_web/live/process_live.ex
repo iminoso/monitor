@@ -1,6 +1,7 @@
 defmodule Monitor.ProcessLive do
   use Phoenix.LiveView
   alias Monitor.Util
+  alias Monitor.Alert
 
   def render(assigns) do
     ~L"""
@@ -22,8 +23,21 @@ defmodule Monitor.ProcessLive do
           <h3>Settings</h3>
           <form>
             <fieldset>
-              <label for="window">Monitor Window Length (in seconds)</label>
-              <input phx-click="window" type="number" value="<%= @window_length %>" min="1" id="window">
+              <label for="threshold">Process Alert Threshold</label>
+              <input phx-click="threshold" type="number" value="<%= @alert_threshold %>" min="1" max="100" id="threshold">
+
+              <label for="alert-window">Alert Window Length</label>
+              <input phx-click="alert-window" type="number" value="<%= @alert_window_length %>" min="1" id="alert-window">
+
+              <label for="monitor-window">Monitor Window Length (in seconds)</label>
+              <input phx-click="monitor-window" type="number" value="<%= @monitor_window_length %>" min="1" id="monitor-window">
+
+              <p>
+                An alert will be generated if the average process % tracked in the last
+                <%= @alert_window_length * @monitor_window_length %> seconds is greater than or equal to
+                <%= @alert_threshold %>%.
+              </p>
+
               <label for="cpu-max">Simulate Heavy CPU Load</label>
               <input phx-click="cpu-max" type="checkbox" id="cpu-max" <%= if @simulation do %>checked <% end %>>
             </fieldset>
@@ -48,9 +62,26 @@ defmodule Monitor.ProcessLive do
           fill="none"
           stroke="#00749d"
           stroke-width="2"
-          points="<%= @system_info |> convert_data() %>"
+          points="<%= @system_info |> Util.convert_data() %>"
         />
       </svg>
+
+      <h3 class="header">Alert History</h3>
+      <div>
+        <%= if length(@alert_log) > 0 do %>
+          <%= for {val, alert_timestamp, state, resolved_timestamp} <- @alert_log |> Enum.reverse() do  %>
+            <p class="alert alert-<%= Atom.to_string(state) %>" role="alert">
+              High load generated an alert - load = <%= val %>, triggered at time <%= alert_timestamp %>
+              <%= if resolved_timestamp do %>
+                - [Resolved at <%= resolved_timestamp %>]
+              <% end %>
+            </p>
+          <% end %>
+        <% else %>
+          No alerts have been generated.
+        <% end %>
+      </div>
+
       <h3 class="header">Log History</h3>
       <table>
         <thead>
@@ -67,7 +98,7 @@ defmodule Monitor.ProcessLive do
             <%= if s do %>
               <tr>
                 <td>
-                  <%= s |> Keyword.get(:timestamp) |> Time.to_iso8601() %>
+                  <%= s |> Keyword.get(:timestamp) %>
                 </td>
                 <td>
                   <%= s |> Keyword.get(:process_average) %>
@@ -101,10 +132,13 @@ defmodule Monitor.ProcessLive do
         socket,
         system_info: List.duplicate(nil, 60),
         process_window: [],
-        window_length: 10,
+        monitor_window_length: 10,
         loading_initial_data: true,
         menu_open: false,
-        simulation: false
+        simulation: false,
+        alert_threshold: 95,
+        alert_log: [],
+        alert_window_length: 12
       )
     }
   end
@@ -115,11 +149,14 @@ defmodule Monitor.ProcessLive do
           assigns: %{
             system_info: system_info,
             process_window: process_window,
-            window_length: window_length
+            monitor_window_length: monitor_window_length,
+            alert_threshold: alert_threshold,
+            alert_log: alert_log,
+            alert_window_length: alert_window_length
           }
         } = socket
       )
-      when length(process_window) == window_length do
+      when length(process_window) == monitor_window_length do
     tick()
 
     {
@@ -127,17 +164,25 @@ defmodule Monitor.ProcessLive do
       assign(
         socket,
         system_info:
-          insert_data_point(
+          Util.insert_data_point(
             system_info,
             Keyword.new([
               {:timestamp, Time.utc_now() |> Time.truncate(:second)},
-              {:process_average, (Enum.sum(process_window) / window_length) |> Kernel.trunc()},
+              {:process_average,
+               (Enum.sum(process_window) / monitor_window_length) |> Kernel.trunc()},
               {:free_memory, Util.free_memory()},
               {:used_memory, Util.used_memory()}
             ])
           ),
         process_window: [Util.cpu_util()],
-        loading_initial_data: false
+        loading_initial_data: false,
+        alert_log:
+          Alert.process_alerts(
+            system_info,
+            alert_log,
+            alert_window_length,
+            alert_threshold
+          )
       )
     }
   end
@@ -147,29 +192,40 @@ defmodule Monitor.ProcessLive do
     {:noreply, assign(socket, process_window: process_window ++ [Util.cpu_util()])}
   end
 
-  def handle_event("window", %{"value" => value}, socket) do
-    {window_length, _} = Integer.parse(value)
+  def handle_event("menu-open", _value, %{assigns: %{menu_open: menu_open}} = socket) do
+    {:noreply, assign(socket, menu_open: menu_open |> Kernel.not())}
+  end
+
+  def handle_event("threshold", %{"value" => value}, socket) do
+    {alert_threshold, _} = Integer.parse(value)
+    {:noreply, assign(socket, alert_threshold: alert_threshold)}
+  end
+
+  def handle_event("alert-window", %{"value" => value}, socket) do
+    {alert_window_length, _} = Integer.parse(value)
+    {:noreply, assign(socket, alert_window_length: alert_window_length)}
+  end
+
+  def handle_event("monitor-window", %{"value" => value}, socket) do
+    {monitor_window_length, _} = Integer.parse(value)
 
     {
       :noreply,
       assign(
         socket,
-        window_length: window_length,
+        monitor_window_length: monitor_window_length,
         process_window: [Util.cpu_util()]
       )
     }
-  end
-
-  def handle_event("menu-open", _value, %{assigns: %{menu_open: menu_open}} = socket) do
-    {:noreply, assign(socket, menu_open: menu_open |> Kernel.not())}
   end
 
   def handle_event("cpu-max", _value, %{assigns: %{simulation: false}} = socket) do
     process_list =
       Util.cpu_util_per_cpu()
       |> Enum.map(fn _ ->
-        spawn(fn -> infinite_loop() end)
+        spawn(fn -> Util.infinite_loop() end)
       end)
+
     {:noreply, assign(socket, simulation: true, simulated_processes: process_list)}
   end
 
@@ -184,28 +240,5 @@ defmodule Monitor.ProcessLive do
 
   defp tick() do
     self() |> Process.send_after(:tick, 1000)
-  end
-
-  # Convert list into string of points accepted by `polyline` svg element
-  defp convert_data(data_points) do
-    str_points =
-      Enum.with_index(data_points)
-      |> Enum.map(fn {data_value, timestamp} ->
-        data_value = if data_value == nil, do: 0, else: Keyword.get(data_value, :process_average)
-        "#{timestamp * 10},#{200 - data_value * 2}"
-      end)
-
-    str_points |> Enum.join(" ")
-  end
-
-  # Add data point to end of list
-  defp insert_data_point(data, val) do
-    [_ | tail] = data
-    tail ++ [val]
-  end
-
-  # Infinite loop that is forked to simulate CPU load
-  defp infinite_loop() do
-    infinite_loop()
   end
 end
