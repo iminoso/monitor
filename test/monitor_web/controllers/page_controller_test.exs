@@ -1,8 +1,10 @@
 defmodule MonitorWeb.PageControllerTest do
   use MonitorWeb.ConnCase
+  use Phoenix.ConnTest
+  import Phoenix.LiveViewTest
 
   test "GET /", %{conn: conn} do
-    conn = get(conn, "/")
-    assert html_response(conn, 200) =~ "Welcome to Phoenix!"
+    {:ok, view, html} = live(conn, "/")
+    assert html =~ "System Monitoring"
   end
 end
