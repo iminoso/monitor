@@ -7,7 +7,7 @@ defmodule Monitor.Alert do
   Process the alerts from the streamed system info data. Outputs a log of alert logs, given
   an alert window length and alert threshold
   """
-  def process_alerts(system_info, alert_log, alert_window_length, alert_threshold) do
+  def process_logs(system_info, alert_log, alert_window_length, alert_threshold) do
     alert_window = get_alert_window(system_info, alert_window_length)
 
     if length(alert_window) == alert_window_length do

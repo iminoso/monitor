@@ -177,7 +177,7 @@ defmodule Monitor.ProcessLive do
         process_window: [Util.cpu_util()],
         loading_initial_data: false,
         alert_log:
-          Alert.process_alerts(
+          Alert.process_logs(
             system_info,
             alert_log,
             alert_window_length,
