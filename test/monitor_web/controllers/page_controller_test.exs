@@ -4,7 +4,7 @@ defmodule MonitorWeb.PageControllerTest do
   import Phoenix.LiveViewTest
 
   test "GET /", %{conn: conn} do
-    {:ok, view, html} = live(conn, "/")
+    {:ok, _view, html} = live(conn, "/")
     assert html =~ "System Monitoring"
   end
 end
