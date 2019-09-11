@@ -8,18 +8,23 @@ A live running instance of this app is running on Heroku: https://intense-wildwo
 
 ## Running the application locally
 
-### Easy method with Docker
+There are two options for running the application locally:
 
-With [Docker](https://www.docker.com) installed run:
+### 1. Easy method with Docker
+
+With [Docker](https://www.docker.com)\* installed run:
 ```
 $ docker-compose up
 ```
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser to run the application.
 
-### Natively running the application
+\* Note that the system load tracked in the web application will be that of the process within the container.
 
-The following dependencies are required for the application:
+### 2. Natively running the application
+
+If you want to instead natively run the web applicaiton, the following dependencies are required
+for the application:
 ```
 elixir 1.8.1
 erlang 20.1
@@ -42,6 +47,12 @@ $ mix phx.server
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser to run the application.
 
-### Appliaction Design and Decisions
+While natively setting up the application, tests can also be run using:
 
-See [docs/design](docs/design.md)
+```
+$ mix tests
+```
+
+## Web Application Design and Documentation
+
+See [docs/design](docs/design.md).
