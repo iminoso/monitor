@@ -46,13 +46,13 @@ and as such no additional frontend library for state management (ie. React or Em
 ## Design Walkthrough and Explanation
 
 The main index page of the site is routed via the [router.ex](/lib/monitor_web/router.ex), which points
-to the [page_controller.ex](lib/monitor_web/controllers/page_controller.ex).
+to the [page_controller.ex](/lib/monitor_web/controllers/page_controller.ex).
 
-Given the request, the page controller routes the request to LiveView process, [process_live.ex](lib/monitor_web/live/process_live.ex).
+Given the request, the page controller routes the request to LiveView process, [process_live.ex](/lib/monitor_web/live/process_live.ex).
 
 The LiveView process initializes the state `mount/2` function and renders the template back to the client.
 Within the mount function, a timer function `tick()` is also called. The tick function is called every second
-to calculate the system load information, provided util functions in [util.ex](lib/monitor/util.ex).
+to calculate the system load information, provided util functions in [util.ex](/lib/monitor/util.ex).
 
 Some of main variables for initialized for state include:
 * **`monitor_window_length`** - As the tick function is called to obtain system load every second, the monitor window
@@ -63,8 +63,8 @@ the average load (default: 12)
 * **`alert_thresohld`** - If the average obtained from the alert window length of most recent data is greater
 than this threshold value, trigger and store an alert (default: 95)
 
-The logic for the determining the triggering of alerts is in [alert.ex](lib/monitor/alert.ex) and the
-tests for this logic are found in [alert_test.exs](test/monitor/alert_test.exs).
+The logic for the determining the triggering of alerts is in [alert.ex](/lib/monitor/alert.ex) and the
+tests for this logic are found in [alert_test.exs](/test/monitor/alert_test.exs).
 
 ## Visualization
 
