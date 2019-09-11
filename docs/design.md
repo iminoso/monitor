@@ -14,7 +14,7 @@ client side updates using server side logic via WebSockets
 When designing the application to stream system load info, I was deciding between using two options:
 
 1. Use a standard web framework with an api. The api would include a GET endpoint that returns that
-current system load. Render client side code for the browser, and **poll** the endpoint over a period.
+current system load, render client side code for the browser, and **poll** the endpoint over a period.
 2. Use a standard web framework, but instead of polling the api for system load information, use
 **WebSockets**.
 
@@ -40,7 +40,7 @@ LiveView process via WebSockets and opens a stateful connection.
 ![Phoenix LiveView](https://elixirschool.com/assets/live_view-6a1ff8ddee59b55d1ee0b72dc8d47c55e55bdcaf6b788cc65af31afec66836d3.png "Phoenix LiveView")
 
 As the application is running, client side events can be handled through callback functions defined
-in the template in the LiveView process. This allows the client to interactly directly with the server,
+in the template in the LiveView process. This allows the client to interact directly with the server,
 and as such no additional frontend library for state management (ie. React or Ember), is required.
 
 ## Design Walkthrough and Explanation
@@ -60,7 +60,7 @@ length is used to define the period, in seconds, in which to take the average an
 for the log (default: 10 seconds)
 * **`alert_window_length`** - The amount of the most recently logged data points to take to calculate
 the average load (default: 12)
-* **`alert_thresohld`** - If the average obtained from the alert window length of most recent data is greater
+* **`alert_threshold`** - If the average obtained from the alert window length of most recent data is greater
 than this threshold value, trigger and store an alert (default: 95)
 
 The logic for the determining the triggering of alerts is in [alert.ex](/lib/monitor/alert.ex) and the
@@ -89,8 +89,8 @@ the alert window or threshold, open the settings panel in the top right of the a
 
 ## Simulated Heavy Load
 
-Within the menu settings, high load can also be simulated by selecting checkbox. Given the number or cpus
-in the system, an equal number of running processes with infinte loops will be spawned to simulate heavy
+Within the menu settings, high load can also be simulated by selecting the checkbox. Given the number of cpus
+in the system, an equal number of running processes with infinite loops will be spawned to simulate heavy
 cpu usage. Unchecking the box will kill the spawned processes.
 
 ## Potential Improvements to the Design
@@ -112,7 +112,7 @@ will no longer be available. This can be a problem is the user wants to see hist
 to opening the web application. In order to do this, a database can be used to store information. On page
 load, a query to the stored information can be used to prepopulate system load with existing information.
 
-### Mobile Friendly
+### Mobile friendly
 
 Although the design is responsive, the chart is not mobile friendly as media query break points aren't provided
 by the default design library. This means that the user must scroll horizontally on mobile to view chart

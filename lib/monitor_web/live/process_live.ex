@@ -47,6 +47,11 @@ defmodule Monitor.ProcessLive do
     </header>
 
     <main role="main" class="container">
+
+      <%= if @loading_initial_data do %>
+        Please Wait - Loading system data <%= for _ <- @process_window do %> . <% end %>
+      <% end %>
+
       <h3 class="header"> Process Utilization Percentage</h3>
       <%= if @simulation do %>
         <p class="alert alert-warning" role="alert">WARNING: Triggered Heavy CPU Load Simulation</p>
@@ -115,10 +120,6 @@ defmodule Monitor.ProcessLive do
         <% end %>
         </tbody>
       </table>
-
-      <%= if @loading_initial_data do %>
-        Loading system data <%= for _ <- @process_window do %> . <% end %>
-      <% end %>
     </main>
     """
   end
