@@ -31,7 +31,7 @@ erlang 20.1
 nodejs 10.16.0
 ```
 
-Using [asdf] version manager to install the dependencies provided in `.tool-versions`
+Use [asdf](https://asdf-vm.com/#/core-manage-asdf-vm) version manager to install the dependencies provided in `.tool-versions`:
 
 ```
 $ asdf install
