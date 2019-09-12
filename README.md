@@ -55,4 +55,5 @@ $ mix tests
 
 ## Web Application Design and Documentation
 
-See [docs/design](docs/design.md).
+For notes on design though processes, high level code walkthrough, and suggestionts for 
+potential improvement, see [docs/design](docs/design.md).
