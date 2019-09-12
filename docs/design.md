@@ -41,7 +41,7 @@ LiveView process via WebSockets and opens a stateful connection.
 
 As the application is running, client side events can be handled through callback functions defined
 in the template in the LiveView process. This allows the client to interact directly with the server,
-and as such no additional frontend library for state management (ie. React or Ember), is required.
+and as such **no additional frontend library for state management (ie. React or Ember), is required**.
 
 ## Design Walkthrough and Explanation
 
@@ -69,8 +69,8 @@ tests for this logic are found in [alert_test.exs](/test/monitor/alert_test.exs)
 ## Visualization
 
 As new system load information is loaded in the client via WebSockets, an SVG polyline chart is
-rendered via the templated provided by the LiveView process. The polyline is adjusted in the viewbox
-to be proportional to the load averages being streamed in.
+rendered via the templates provided by the LiveView process. The polyline value is adjusted in the viewbox
+to be proportional to the load averages being streamed in real time.
 
 In addition to the SVG polyline chart, a table with timestamp recordings of system load information is also displayed.
 Most recent taken data is prepended to the top of the table.
@@ -85,7 +85,8 @@ Given the alert window length, if the latest 120 seconds of process load data av
 an alert will be triggered. Once the average in the window goes below 95%, a recovery alert will be displayed.
 
 To configure and change this settings, such as displaying system load more quickly in 5 seconds, or changing
-the alert window or threshold, open the settings panel in the top right of the application.
+the alert window or threshold, open the settings panel in the top right of the application. Modify the values
+provided in the input boxes.
 
 ## Simulated Heavy Load
 
@@ -97,11 +98,11 @@ cpu usage. Unchecking the box will kill the spawned processes.
 
 ### Making the visualization interactable
 
-One downside to using Phoenix LiveView is that it does not allow interoperability with JavaScript.
+One downside to using Phoenix LiveView is that it **does not allow interoperability with JavaScript client libraries**.
 This was the reason for rendering the chart with vanilla SVG instead of a visualization library such
 as D3. An improvement can be made to make this SVG chart visualization more interactable. This can
-include clicking on the chart to render more information about the data point, or creating more
-behaviour with events such as hover or key presses. Without the ability to use client side JavaScript
+include clicking on the chart to render more information about a data point, or creating more interaction
+behaviour with events such as a hover or key presses. Without the ability to use client side JavaScript
 libraries with the templates though, this may be difficult to accomplish.
 
 ### Persisting recorded system load
@@ -110,7 +111,8 @@ With WebSockets, the system load information recorded will only exist in memory 
 exists. The moment the browser closes or the client connection is closed, all system load data recorded
 will no longer be available. This can be a problem is the user wants to see historical data, from prior
 to opening the web application. In order to do this, a database can be used to store information. On page
-load, a query to the stored information can be used to prepopulate system load with existing information.
+load, a query to the stored information can be used to prepopulate system load with existing information,
+while continuing to stream new system load data.
 
 ### Mobile friendly
 
