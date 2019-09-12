@@ -49,7 +49,7 @@ defmodule Monitor.ProcessLive do
     <main role="main" class="container">
 
       <%= if @loading_initial_data do %>
-        <div>Please Wait - Loading System Data
+        <div>Please Wait - Loading System Data</div>
         <div><%= for _ <- @process_window do %> . <% end %></div>
       <% end %>
 
