@@ -49,7 +49,8 @@ defmodule Monitor.ProcessLive do
     <main role="main" class="container">
 
       <%= if @loading_initial_data do %>
-        Please Wait - Loading system data <%= for _ <- @process_window do %> . <% end %>
+        <div>Please Wait - Loading System Data
+        <div><%= for _ <- @process_window do %> . <% end %></div>
       <% end %>
 
       <h3 class="header"> Process Utilization Percentage</h3>
